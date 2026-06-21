@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Troc-Livres</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --tableau: #1F3D2E;
+    --tableau-clair: #2B4F3B;
+    --craie: #F5F1E6;
+    --papier: #FBF8F1;
+    --papier-ligne: #E2D9C3;
+    --rouge: #C23B22;
+    --rouge-clair: rgba(194,59,34,0.08);
+    --jaune: #D9A536;
+    --bleu-encre: #2B4570;
+    --gris: #767066;
+    --tab1: #E8DCC2;
+    --tab2: #CFE1D4;
+    --tab3: #EFD3BD;
+    --tab4: #D6DEEC;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--papier); color:#2A2A28; font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.chalk{font-family:'Kalam',cursive;}
+  a{color:var(--bleu-encre);}
+  button{font-family:'Inter',sans-serif; cursor:pointer;}
+  :focus-visible{outline:3px solid var(--jaune); outline-offset:2px;}
+
+  .hero{background:var(--tableau); background-image:radial-gradient(circle at 85% 20%, var(--tableau-clair) 0%, var(--tableau) 60%); color:var(--craie); padding:38px 24px 54px; position:relative; overflow:hidden;}
+  .hero-inner{max-width:880px; margin:0 auto; position:relative; z-index:2;}
+  .hero h1{font-size:2.5rem; margin:0 0 6px;}
+  .hero p{font-size:1.05rem; max-width:560px; line-height:1.5; opacity:0.92; margin:0 0 16px;}
+  .hero .stat{display:inline-block; font-family:'Kalam',cursive; font-size:0.95rem; background:rgba(255,255,255,0.08); border:1px dashed rgba(255,255,255,0.35); padding:6px 14px; border-radius:20px;}
+  .doodle{position:absolute; opacity:0.5; stroke:var(--craie);}
+  .doodle.book{top:14px; right:60px; width:70px;}
+  .doodle.pencil{bottom:10px; right:160px; width:90px; transform:rotate(18deg);}
+
+  .banner{background:var(--craie); border-bottom:2px dashed var(--rouge); padding:10px 24px; font-size:0.86rem; color:#5a3a30; display:flex; align-items:center; justify-content:center; gap:10px; text-align:center; flex-wrap:wrap;}
+  .banner strong{color:var(--rouge);}
+
+  nav.tabs{display:flex; gap:6px; flex-wrap:wrap; padding:14px 20px 0; margin-top:-2px; max-width:920px; margin-left:auto; margin-right:auto;}
+  .tab{font-family:'Kalam',cursive; font-size:1rem; font-weight:700; padding:10px 18px 9px; border-radius:10px 10px 0 0; border:1px solid rgba(0,0,0,0.08); border-bottom:none; box-shadow:0 -2px 6px rgba(0,0,0,0.06); cursor:pointer; position:relative; top:6px; transition:top .15s, box-shadow .15s; color:#3a3530;}
+  .tab:hover{top:3px;}
+  .tab[aria-selected="true"]{top:0; background:var(--papier); box-shadow:0 -4px 10px rgba(0,0,0,0.10);}
+  .tab[data-tab="dispo"]{background:var(--tab1);}
+  .tab[data-tab="recherches"]{background:var(--tab2);}
+  .tab[data-tab="publier-livre"]{background:var(--tab3);}
+  .tab[data-tab="publier-demande"]{background:var(--tab4);}
+  .tab .count{font-family:'Inter',sans-serif; font-weight:600; font-size:0.78rem; opacity:0.65;}
+
+  main{max-width:920px; margin:0 auto; padding:0 20px 60px;}
+  .panel{background:var(--papier); border:1px solid rgba(0,0,0,0.07); border-radius:0 10px 10px 10px; padding:22px; box-shadow:0 6px 18px rgba(0,0,0,0.05);}
+
+  .filters{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; align-items:end;}
+  .filters .field{display:flex; flex-direction:column; gap:4px;}
+  .filters label{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--gris);}
+  select, input, textarea{font-family:'Inter',sans-serif; font-size:0.92rem; padding:8px 10px; border:1px solid #D8D0BC; border-radius:6px; background:#fff; color:#2A2A28;}
+  .filters select, .filters input{min-width:140px;}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:16px;}
+  .card{position:relative; background:var(--papier); background-image:repeating-linear-gradient(transparent 0 23px, var(--papier-ligne) 23px 24px); border:1px solid rgba(0,0,0,0.08); border-radius:8px; padding:14px 14px 14px 32px; box-shadow:0 3px 8px rgba(0,0,0,0.05); animation:fadeIn .25s ease-out;}
+  .card::before{content:''; position:absolute; left:20px; top:0; bottom:0; width:1px; background:rgba(194,59,34,0.35);}
+  @media (prefers-reduced-motion: reduce){ .card{animation:none;} }
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .card h3{margin:0 0 4px; font-size:1.08rem; color:#23291f; line-height:1.3;}
+  .meta{font-size:0.82rem; color:var(--gris); margin:0 0 8px;}
+  .meta b{color:#3a3530;}
+  .comment{font-size:0.86rem; color:#403c35; font-style:italic; margin:6px 0 10px;}
+  .contact-box{font-size:0.84rem; background:var(--rouge-clair); border-radius:6px; padding:8px 10px; margin:8px 0; word-break:break-word;}
+  .card-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+
+  .stamp{display:inline-block; font-family:'Kalam',cursive; font-weight:700; text-transform:uppercase; font-size:0.7rem; letter-spacing:0.6px; padding:3px 10px; border-radius:4px; border:2px solid var(--tableau); color:var(--tableau); transform:rotate(-6deg); opacity:0.9; white-space:nowrap; flex-shrink:0;}
+  .stamp.reserve{border-color:var(--jaune); color:var(--jaune);}
+  .stamp.donne, .stamp.comblee{border-color:var(--gris); color:var(--gris); opacity:0.55;}
+
+  .badge{display:inline-block; font-size:0.74rem; font-weight:600; padding:2px 8px; border-radius:12px; background:#eee; color:#555; margin-right:4px;}
+  .badge.don{background:#DDEFE3; color:#236B43;}
+  .badge.echange{background:#E3E8F5; color:#2B4570;}
+  .badge.vente{background:#F6E5CF; color:#8A5A22;}
+
+  .btn{border:none; border-radius:6px; padding:7px 13px; font-size:0.82rem; font-weight:600;}
+  .btn-primary{background:var(--rouge); color:#fff;}
+  .btn-primary:hover{background:#a82f1b;}
+  .btn-ghost{background:none; border:1px solid #C9C0AA; color:#4a453d;}
+  .btn-ghost:hover{background:#efe9d8;}
+  .btn-danger-ghost{background:none; border:1px solid #d8b9b0; color:var(--rouge); font-size:0.78rem;}
+  .btn-danger-ghost:hover{background:var(--rouge-clair);}
+
+  .match-alert{background:#FCEFD9; border:1px dashed var(--jaune); border-radius:6px; padding:8px 10px; font-size:0.82rem; margin:8px 0 0; color:#7a5417;}
+  .empty-state{text-align:center; padding:50px 20px; color:var(--gris);}
+  .empty-state .chalk{font-size:1.3rem; color:#3a3530; display:block; margin-bottom:6px;}
+
+  form.publish{display:grid; grid-template-columns:1fr 1fr; gap:14px; background-image:repeating-linear-gradient(transparent 0 26px, var(--papier-ligne) 26px 27px); padding:6px 4px 4px 30px; position:relative;}
+  form.publish::before{content:''; position:absolute; left:18px; top:0; bottom:0; width:1px; background:rgba(194,59,34,0.35);}
+  form.publish .field{display:flex; flex-direction:column; gap:4px;}
+  form.publish .field.full{grid-column:1 / -1;}
+  form.publish label{font-size:0.78rem; font-weight:600; color:#3a3530;}
+  form.publish .hint{font-size:0.74rem; color:var(--gris); margin-top:2px;}
+  form.publish textarea{resize:vertical; min-height:54px;}
+  .form-submit{grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px; margin-top:6px;}
+  @media (max-width:560px){form.publish{grid-template-columns:1fr;}}
+
+  .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--tableau); color:var(--craie); padding:12px 20px; border-radius:8px; font-size:0.9rem; box-shadow:0 6px 16px rgba(0,0,0,0.25); z-index:50; max-width:90%;}
+  .hidden{display:none !important;}
+  .loading-line{color:var(--gris); font-style:italic; padding:30px 0; text-align:center;}
+  .error-line{color:var(--rouge); padding:20px 0; text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <svg class="doodle book" viewBox="0 0 80 60" fill="none" stroke-width="2"><path d="M5 8 C20 2,30 2,38 8 L38 50 C30 44,20 44,5 50 Z"/><path d="M75 8 C60 2,50 2,42 8 L42 50 C50 44,60 44,75 50 Z"/><line x1="40" y1="8" x2="40" y2="50"/></svg>
+  <svg class="doodle pencil" viewBox="0 0 100 20" fill="none" stroke-width="2"><line x1="2" y1="10" x2="80" y2="10"/><path d="M80 4 L94 10 L80 16 Z"/><path d="M2 10 L10 4 M2 10 L10 16"/></svg>
+  <div class="hero-inner">
+    <h1>📖 Le Troc-Livres</h1>
+    <p>Avant d'acheter un livre neuf pour la rentrée ou un cours, regarde si un autre élève veut s'en débarrasser. Donne, échange ou publie ce que tu cherches — et reçois un email dès qu'une correspondance apparaît.</p>
+    <span class="stat" id="statLine">Connexion à la base de données…</span>
+  </div>
+</div>
+
+<div class="banner">
+  💬 <span><strong>À savoir :</strong> ce que tu publies (titre, email…) est visible par toute personne qui consulte le site. Utilise de préférence un email dédié plutôt qu'un numéro de téléphone perso. Cet email sert aussi à t'envoyer une notification en cas de correspondance.</span>
+</div>
+
+<nav class="tabs" role="tablist">
+  <button class="tab" data-tab="dispo" role="tab" aria-selected="true">📚 Livres disponibles <span class="count" id="countDispo"></span></button>
+  <button class="tab" data-tab="recherches" role="tab" aria-selected="false">🔎 Je recherche <span class="count" id="countRecherche"></span></button>
+  <button class="tab" data-tab="publier-livre" role="tab" aria-selected="false">➕ Publier un livre</button>
+  <button class="tab" data-tab="publier-demande" role="tab" aria-selected="false">➕ Publier une recherche</button>
+</nav>
+
+<main>
+  <section class="panel" id="panel-dispo">
+    <div class="filters">
+      <div class="field"><label for="f-niveau">Niveau</label><select id="f-niveau"><option value="">Tous</option></select></div>
+      <div class="field"><label for="f-matiere">Matière</label><select id="f-matiere"><option value="">Toutes</option></select></div>
+      <div class="field"><label for="f-type">Type</label>
+        <select id="f-type">
+          <option value="">Tous</option>
+          <option value="don">Don gratuit</option>
+          <option value="echange">Échange</option>
+          <option value="vente">Vente à petit prix</option>
+        </select>
+      </div>
+      <div class="field"><label for="f-texte">Recherche</label><input id="f-texte" type="search" placeholder="Titre du livre…"></div>
+    </div>
+    <div id="listeDispo"><p class="loading-line">Chargement des livres disponibles…</p></div>
+  </section>
+
+  <section class="panel hidden" id="panel-recherches">
+    <div class="filters">
+      <div class="field"><label for="fr-niveau">Niveau</label><select id="fr-niveau"><option value="">Tous</option></select></div>
+    </div>
+    <div id="listeRecherches"><p class="loading-line">Chargement des recherches…</p></div>
+  </section>
+
+  <section class="panel hidden" id="panel-publier-livre">
+    <h2 class="chalk" style="margin-top:0;">Publier un livre à donner, échanger ou vendre</h2>
+    <form class="publish" id="formLivre">
+      <div class="field full"><label for="l-titre">Titre du livre *</label><input id="l-titre" required placeholder="Ex : Maths 4e, collection Sésamath"></div>
+      <div class="field"><label for="l-matiere">Matière *</label><input id="l-matiere" required list="matieres" placeholder="Ex : Mathématiques"></div>
+      <div class="field"><label for="l-niveau">Niveau *</label><select id="l-niveau" required></select></div>
+      <div class="field"><label for="l-etat">État *</label>
+        <select id="l-etat" required>
+          <option value="Neuf">Neuf</option>
+          <option value="Bon état">Bon état</option>
+          <option value="Usé mais complet">Usé mais complet</option>
+          <option value="Très abîmé">Très abîmé</option>
+        </select>
+      </div>
+      <div class="field"><label for="l-type">Je propose *</label>
+        <select id="l-type" required>
+          <option value="don">Don gratuit</option>
+          <option value="echange">Échange</option>
+          <option value="vente">Vente à petit prix</option>
+        </select>
+      </div>
+      <div class="field full"><label for="l-etablissement">Établissement (optionnel)</label><input id="l-etablissement" placeholder="Ex : Collège Victor Hugo"></div>
+      <div class="field full"><label for="l-commentaire">Commentaire (optionnel)</label><textarea id="l-commentaire" placeholder="Annoté ou pas, manuel ou cahier d'exercices, etc."></textarea></div>
+      <div class="field"><label for="l-contact-email">Ton email *</label><input id="l-contact-email" type="email" required placeholder="prenom@email.com"></div>
+      <div class="field"><label for="l-contact-note">Précision de contact (optionnel)</label><input id="l-contact-note" placeholder="Ex : à récupérer à l'école"></div>
+      <p class="hint full" style="grid-column:1/-1; margin:-6px 0 0;">Ton email sera visible publiquement et utilisé pour te notifier si quelqu'un correspond à ta recherche.</p>
+      <div class="form-submit"><button type="submit" class="btn btn-primary">Publier l'annonce</button></div>
+    </form>
+  </section>
+
+  <section class="panel hidden" id="panel-publier-demande">
+    <h2 class="chalk" style="margin-top:0;">Publier ce que tu recherches</h2>
+    <form class="publish" id="formDemande">
+      <div class="field full"><label for="d-titre">Titre du livre recherché *</label><input id="d-titre" required placeholder="Ex : Anglais 3e, Workbook New Bridges"></div>
+      <div class="field"><label for="d-matiere">Matière *</label><input id="d-matiere" required list="matieres" placeholder="Ex : Anglais"></div>
+      <div class="field"><label for="d-niveau">Niveau *</label><select id="d-niveau" required></select></div>
+      <div class="field full"><label for="d-commentaire">Précisions (optionnel)</label><textarea id="d-commentaire" placeholder="Édition demandée par le prof, date limite, etc."></textarea></div>
+      <div class="field"><label for="d-contact-email">Ton email *</label><input id="d-contact-email" type="email" required placeholder="prenom@email.com"></div>
+      <div class="field"><label for="d-contact-note">Précision de contact (optionnel)</label><input id="d-contact-note" placeholder="Ex : à récupérer à l'école"></div>
+      <p class="hint full" style="grid-column:1/-1; margin:-6px 0 0;">Ton email sera visible publiquement et utilisé pour te notifier dès qu'un livre correspondant est publié.</p>
+      <div class="form-submit"><button type="submit" class="btn btn-primary">Publier la recherche</button></div>
+    </form>
+  </section>
+</main>
+
+<datalist id="matieres">
+  <option value="Français"></option><option value="Mathématiques"></option><option value="Histoire-Géographie"></option>
+  <option value="SVT"></option><option value="Physique-Chimie"></option><option value="Anglais"></option>
+  <option value="Espagnol"></option><option value="Allemand"></option><option value="Italien"></option>
+  <option value="Technologie"></option><option value="Arts plastiques"></option><option value="Éducation musicale"></option>
+  <option value="EPS"></option><option value="Philosophie"></option><option value="SES"></option><option value="Latin"></option>
+</datalist>
+
+<div id="toast" class="toast hidden"></div>
+
+<!-- EmailJS : librairie d'envoi d'email depuis le navigateur -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script type="module">
+// ======================================================================
+// ZONE DE CONFIGURATION — remplace les valeurs ci-dessous par les tiennes
+// Voir le guide pour savoir où trouver chaque information.
+// ======================================================================
+const firebaseConfig = {
+  apiKey: "COLLE_TA_CLE_API_FIREBASE",
+  authDomain: "TON-PROJET.firebaseapp.com",
+  projectId: "TON-PROJET",
+  storageBucket: "TON-PROJET.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:xxxxxxxxxxxxxxxxxxxxxx"
+};
+
+const EMAILJS_PUBLIC_KEY  = "COLLE_TA_CLE_PUBLIQUE_EMAILJS";
+const EMAILJS_SERVICE_ID  = "COLLE_TON_SERVICE_ID_EMAILJS";
+const EMAILJS_TEMPLATE_ID = "COLLE_TON_TEMPLATE_ID_EMAILJS";
+// ======================================================================
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, doc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+const NIVEAUX = ["6e","5e","4e","3e","2nde","1ère","Terminale","Autre"];
+let livres = [];
+let demandes = [];
+let pretLivres = false, pretDemandes = false;
+
+function escapeHtml(str){
+  return String(str ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function formatDate(iso){
+  const d = new Date(iso);
+  const diffJours = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if(diffJours <= 0) return "aujourd'hui";
+  if(diffJours === 1) return "hier";
+  if(diffJours < 7) return `il y a ${diffJours} jours`;
+  return d.toLocaleDateString('fr-FR', {day:'numeric', month:'long'});
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.classList.add('hidden'), 3800);
+}
+function emailValide(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+function fillNiveauSelects(){
+  document.querySelectorAll('#l-niveau, #d-niveau').forEach(sel=>{
+    sel.innerHTML = NIVEAUX.map(n=>`<option value="${n}">${n}</option>`).join('');
+  });
+  [document.getElementById('f-niveau'), document.getElementById('fr-niveau')].forEach(sel=>{
+    sel.innerHTML = '<option value="">Tous</option>' + NIVEAUX.map(n=>`<option value="${n}">${n}</option>`).join('');
+  });
+}
+function fillMatiereFilter(){
+  const sel = document.getElementById('f-matiere');
+  const courant = sel.value;
+  const matieres = [...new Set(livres.map(l=>l.matiere))].sort((a,b)=>a.localeCompare(b,'fr'));
+  sel.innerHTML = '<option value="">Toutes</option>' + matieres.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  sel.value = courant;
+}
+
+/* ---------------- CORRESPONDANCES ---------------- */
+function correspond(demande, livre){
+  if(livre.statut !== 'disponible') return false;
+  const memeNiveau = livre.niveau === demande.niveau;
+  const memeMatiere = livre.matiere.toLowerCase() === demande.matiere.toLowerCase();
+  const mots = demande.titre.toLowerCase().split(/\s+/).filter(w=>w.length>3);
+  const titreProche = mots.some(w => livre.titre.toLowerCase().includes(w));
+  return memeNiveau && (memeMatiere || titreProche);
+}
+function correspondancesPour(demande){ return livres.filter(l => correspond(demande, l)); }
+
+async function notifier(demande, livre){
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: demande.contactEmail,
+      titre_recherche: demande.titre,
+      titre_livre: livre.titre,
+      matiere: livre.matiere,
+      niveau: livre.niveau,
+      etat: livre.etat || '',
+      contact_livre: livre.contactEmail + (livre.contactNote ? ' — ' + livre.contactNote : '')
+    });
+  }catch(e){ console.error('Échec envoi email', e); }
+}
+
+/* ---------------- RENDU ---------------- */
+function badgeType(type){
+  const labels = {don:'Don gratuit', echange:'Échange', vente:'Vente'};
+  return `<span class="badge ${type}">${labels[type] || type}</span>`;
+}
+function stampStatut(statut){
+  if(statut === 'disponible') return `<span class="stamp">Disponible</span>`;
+  if(statut === 'réservé') return `<span class="stamp reserve">Réservé</span>`;
+  return `<span class="stamp donne">Donné</span>`;
+}
+
+function renderListeDispo(){
+  if(!pretLivres){ return; }
+  const niveau = document.getElementById('f-niveau').value;
+  const matiere = document.getElementById('f-matiere').value;
+  const type = document.getElementById('f-type').value;
+  const texte = document.getElementById('f-texte').value.trim().toLowerCase();
+
+  let filtres = livres.filter(l=>{
+    if(niveau && l.niveau !== niveau) return false;
+    if(matiere && l.matiere !== matiere) return false;
+    if(type && l.type !== type) return false;
+    if(texte && !l.titre.toLowerCase().includes(texte)) return false;
+    return true;
+  });
+
+  const cont = document.getElementById('listeDispo');
+  if(filtres.length === 0){
+    cont.innerHTML = `<div class="empty-state"><span class="chalk">Rien par ici pour l'instant.</span>Sois le premier à publier un livre dont tu n'as plus besoin !</div>`;
+    return;
+  }
+  cont.innerHTML = `<div class="grid">${filtres.map(l=>`
+    <div class="card" data-id="${l.id}">
+      <div class="card-top"><h3>${escapeHtml(l.titre)}</h3>${stampStatut(l.statut)}</div>
+      <p class="meta">${badgeType(l.type)} <b>${escapeHtml(l.matiere)}</b> · ${escapeHtml(l.niveau)} · ${escapeHtml(l.etat)}</p>
+      ${l.etablissement ? `<p class="meta">📍 ${escapeHtml(l.etablissement)}</p>` : ''}
+      ${l.commentaire ? `<p class="comment">"${escapeHtml(l.commentaire)}"</p>` : ''}
+      <p class="meta">Publié ${formatDate(l.datePublication)}</p>
+      <div class="contact-box hidden" data-contact>📩 ${escapeHtml(l.contactEmail)}${l.contactNote ? ' — ' + escapeHtml(l.contactNote) : ''}</div>
+      <div class="card-actions">
+        ${l.statut === 'disponible' ? `
+          <button class="btn btn-primary" data-action="voir-contact">Je suis intéressé</button>
+          <button class="btn btn-ghost" data-action="reserver-livre">Réserver</button>` : ''}
+        ${l.statut === 'réservé' ? `
+          <button class="btn btn-ghost" data-action="don-livre">Marquer comme donné</button>
+          <button class="btn btn-ghost" data-action="liberer-livre">Remettre disponible</button>` : ''}
+        <button class="btn btn-danger-ghost" data-action="suppr-livre">${l.statut === 'donné' ? "Retirer l'annonce" : 'Supprimer'}</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function renderListeRecherches(){
+  if(!pretDemandes || !pretLivres){ return; }
+  const niveau = document.getElementById('fr-niveau').value;
+  let filtres = demandes.filter(d => !niveau || d.niveau === niveau);
+
+  const cont = document.getElementById('listeRecherches');
+  if(filtres.length === 0){
+    cont.innerHTML = `<div class="empty-state"><span class="chalk">Aucune recherche en cours.</span>Si la prof t'a demandé un livre, publie-le ici — quelqu'un l'a peut-être déjà.</div>`;
+    return;
+  }
+  cont.innerHTML = `<div class="grid">${filtres.map(d=>{
+    const matches = d.statut === 'active' ? correspondancesPour(d) : [];
+    return `
+    <div class="card" data-id="${d.id}">
+      <div class="card-top"><h3>${escapeHtml(d.titre)}</h3>${d.statut === 'active' ? '<span class="stamp">Recherché</span>' : '<span class="stamp comblee">Trouvé</span>'}</div>
+      <p class="meta"><b>${escapeHtml(d.matiere)}</b> · ${escapeHtml(d.niveau)}</p>
+      ${d.commentaire ? `<p class="comment">"${escapeHtml(d.commentaire)}"</p>` : ''}
+      <p class="meta">Publié ${formatDate(d.datePublication)}</p>
+      <div class="contact-box hidden" data-contact>📩 ${escapeHtml(d.contactEmail)}${d.contactNote ? ' — ' + escapeHtml(d.contactNote) : ''}</div>
+      ${matches.length > 0 ? `<div class="match-alert">🔔 ${matches.length} livre${matches.length>1?'s':''} disponible${matches.length>1?'s':''} : ${matches.map(m=>escapeHtml(m.titre)).join(', ')}</div>` : ''}
+      <div class="card-actions">
+        ${d.statut === 'active' ? `
+          <button class="btn btn-primary" data-action="voir-contact">Voir le contact</button>
+          <button class="btn btn-ghost" data-action="trouve-demande">Marquer comme trouvé</button>` : ''}
+        <button class="btn btn-danger-ghost" data-action="suppr-demande">Supprimer</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function majCompteurs(){
+  document.getElementById('countDispo').textContent = `(${livres.filter(l=>l.statut==='disponible').length})`;
+  document.getElementById('countRecherche').textContent = `(${demandes.filter(d=>d.statut==='active').length})`;
+  document.getElementById('statLine').textContent = `${livres.length} livre(s) publié(s) · ${demandes.filter(d=>d.statut==='active').length} recherche(s) en cours`;
+}
+
+/* ---------------- ÉCOUTE TEMPS RÉEL FIRESTORE ---------------- */
+const qLivres = query(collection(db, 'livres'), orderBy('datePublication', 'desc'));
+onSnapshot(qLivres, snap=>{
+  livres = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  pretLivres = true;
+  fillMatiereFilter();
+  renderListeDispo();
+  renderListeRecherches();
+  majCompteurs();
+}, err=>{
+  document.getElementById('listeDispo').innerHTML = `<p class="error-line">Impossible de charger les annonces. Vérifie ta configuration Firebase.</p>`;
+  console.error(err);
+});
+
+const qDemandes = query(collection(db, 'demandes'), orderBy('datePublication', 'desc'));
+onSnapshot(qDemandes, snap=>{
+  demandes = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  pretDemandes = true;
+  renderListeRecherches();
+  majCompteurs();
+}, err=>{
+  document.getElementById('listeRecherches').innerHTML = `<p class="error-line">Impossible de charger les recherches. Vérifie ta configuration Firebase.</p>`;
+  console.error(err);
+});
+
+/* ---------------- ACTIONS SUR LES CARTES ---------------- */
+document.getElementById('listeDispo').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const card = btn.closest('.card');
+  const id = card.dataset.id;
+  const action = btn.dataset.action;
+  if(action === 'voir-contact'){ card.querySelector('[data-contact]').classList.remove('hidden'); return; }
+  try{
+    if(action === 'reserver-livre') await updateDoc(doc(db,'livres',id), { statut:'réservé' });
+    if(action === 'liberer-livre') await updateDoc(doc(db,'livres',id), { statut:'disponible' });
+    if(action === 'don-livre') await updateDoc(doc(db,'livres',id), { statut:'donné' });
+    if(action === 'suppr-livre'){
+      if(!confirm("Supprimer cette annonce ?")) return;
+      await deleteDoc(doc(db,'livres',id));
+    }
+  }catch(err){ console.error(err); showToast("Erreur, réessaie."); }
+});
+
+document.getElementById('listeRecherches').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const card = btn.closest('.card');
+  const id = card.dataset.id;
+  const action = btn.dataset.action;
+  if(action === 'voir-contact'){ card.querySelector('[data-contact]').classList.remove('hidden'); return; }
+  try{
+    if(action === 'trouve-demande') await updateDoc(doc(db,'demandes',id), { statut:'comblée' });
+    if(action === 'suppr-demande'){
+      if(!confirm("Supprimer cette recherche ?")) return;
+      await deleteDoc(doc(db,'demandes',id));
+    }
+  }catch(err){ console.error(err); showToast("Erreur, réessaie."); }
+});
+
+/* ---------------- FORMULAIRES ---------------- */
+document.getElementById('formLivre').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const contactEmail = document.getElementById('l-contact-email').value.trim();
+  if(!emailValide(contactEmail)){ showToast("Merci d'indiquer un email valide."); return; }
+  const nouveau = {
+    titre: document.getElementById('l-titre').value.trim(),
+    matiere: document.getElementById('l-matiere').value.trim(),
+    niveau: document.getElementById('l-niveau').value,
+    etat: document.getElementById('l-etat').value,
+    type: document.getElementById('l-type').value,
+    etablissement: document.getElementById('l-etablissement').value.trim(),
+    commentaire: document.getElementById('l-commentaire').value.trim(),
+    contactEmail,
+    contactNote: document.getElementById('l-contact-note').value.trim(),
+    datePublication: new Date().toISOString(),
+    statut: 'disponible'
+  };
+  if(!nouveau.titre || !nouveau.matiere) return;
+  try{
+    await addDoc(collection(db,'livres'), nouveau);
+    const correspondances = demandes.filter(d => d.statut === 'active' && correspond(d, nouveau));
+    for(const d of correspondances){ await notifier(d, nouveau); }
+    e.target.reset();
+    showToast(correspondances.length > 0
+      ? `Annonce publiée et ${correspondances.length} personne(s) prévenue(s) par email !`
+      : "Annonce publiée !");
+    activerOnglet('dispo');
+  }catch(err){ console.error(err); showToast("Erreur de publication, réessaie."); }
+});
+
+document.getElementById('formDemande').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const contactEmail = document.getElementById('d-contact-email').value.trim();
+  if(!emailValide(contactEmail)){ showToast("Merci d'indiquer un email valide."); return; }
+  const nouvelle = {
+    titre: document.getElementById('d-titre').value.trim(),
+    matiere: document.getElementById('d-matiere').value.trim(),
+    niveau: document.getElementById('d-niveau').value,
+    commentaire: document.getElementById('d-commentaire').value.trim(),
+    contactEmail,
+    contactNote: document.getElementById('d-contact-note').value.trim(),
+    datePublication: new Date().toISOString(),
+    statut: 'active'
+  };
+  if(!nouvelle.titre || !nouvelle.matiere) return;
+  try{
+    await addDoc(collection(db,'demandes'), nouvelle);
+    const matches = livres.filter(l => correspond(nouvelle, l));
+    for(const l of matches){ await notifier(nouvelle, l); }
+    e.target.reset();
+    showToast(matches.length > 0
+      ? `Recherche publiée — ${matches.length} livre(s) correspondent déjà, regarde tes emails !`
+      : "Recherche publiée ! Tu seras prévenu par email dès qu'un livre correspond.");
+    activerOnglet('recherches');
+  }catch(err){ console.error(err); showToast("Erreur de publication, réessaie."); }
+});
+
+/* ---------------- FILTRES & ONGLETS ---------------- */
+['f-niveau','f-matiere','f-type','f-texte'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', renderListeDispo);
+});
+document.getElementById('fr-niveau').addEventListener('input', renderListeRecherches);
+
+function activerOnglet(nom){
+  document.querySelectorAll('.tab').forEach(t=> t.setAttribute('aria-selected', t.dataset.tab===nom ? 'true':'false'));
+  document.querySelectorAll('main section').forEach(s=> s.classList.add('hidden'));
+  document.getElementById('panel-'+nom).classList.remove('hidden');
+}
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=> activerOnglet(tab.dataset.tab));
+});
+
+fillNiveauSelects();
+</script>
+</body>
+</html>
