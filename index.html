@@ -311,7 +311,12 @@ async function notifier(demande, livre){
       etat: livre.etat || '',
       contact_livre: livre.contactEmail + (livre.contactNote ? ' — ' + livre.contactNote : '')
     });
-  }catch(e){ console.error('Échec envoi email', e); }
+  }catch(e){
+      console.error('Échec envoi email');
+      console.error('Status :', e.status);
+      console.error('Text :', e.text);
+      console.error('Objet complet :', e);
+  }
 }
 
 /* ---------------- RENDU ---------------- */
