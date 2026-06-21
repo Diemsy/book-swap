@@ -302,20 +302,31 @@ function correspondancesPour(demande){ return livres.filter(l => correspond(dema
 
 async function notifier(demande, livre){
   try{
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email: demande.contactEmail,
-      titre_recherche: demande.titre,
-      titre_livre: livre.titre,
-      matiere: livre.matiere,
-      niveau: livre.niveau,
-      etat: livre.etat || '',
-      contact_livre: livre.contactEmail + (livre.contactNote ? ' — ' + livre.contactNote : '')
-    });
-  }catch(e){
-      console.error('Échec envoi email');
-      console.error('Status :', e.status);
-      console.error('Text :', e.text);
-      console.error('Objet complet :', e);
+    const result = await emailjs.send(
+      EMAILJS_SERVICE_ID,
+      EMAILJS_TEMPLATE_ID,
+      {
+        to_email: demande.contactEmail,
+        titre_recherche: demande.titre,
+        titre_livre: livre.titre,
+        matiere: livre.matiere,
+        niveau: livre.niveau,
+        etat: livre.etat || '',
+        contact_livre: livre.contactEmail +
+          (livre.contactNote ? ' — ' + livre.contactNote : ''),
+        name: 'Le Troc-Livres',
+        email: 'noreply@troc-livres.fr'
+      },
+      EMAILJS_PUBLIC_KEY
+    );
+
+    console.log('Email envoyé avec succès', result);
+
+  } catch (e) {
+    console.error('Échec envoi email');
+    console.error('Status :', e.status);
+    console.error('Text :', e.text);
+    console.error('Objet complet :', e);
   }
 }
 
